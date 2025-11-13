@@ -49,6 +49,23 @@ const validateAddUser = [
     .withMessage('Invalid role')
 ];
 
+const validateUpdateUser = [
+  body('name').optional().trim().isLength({ min: 20, max: 60 })
+    .withMessage('Name must be between 20 and 60 characters'),
+  body('email').optional().trim().custom(validateEmail)
+    .withMessage('Invalid email format'),
+  body('address').optional().trim().isLength({ max: 400 })
+    .withMessage('Address must not exceed 400 characters'),
+  body('role').optional().isIn(['normal_user', 'admin', 'store_owner'])
+    .withMessage('Invalid role'),
+  body('keep_old_password').optional().isBoolean()
+    .withMessage('keep_old_password must be boolean'),
+  body('password')
+    .optional({ checkFalsy: true })
+    .custom(validatePassword)
+    .withMessage('Password must be 8-16 characters with at least one uppercase letter and one special character'),
+];
+
 const validateAddStore = [
   body('name')
     .trim()
@@ -90,5 +107,6 @@ module.exports = {
   validateAddStore,
   validateRating,
   validatePasswordChange,
+  validateUpdateUser,
   handleValidationErrors
 };
