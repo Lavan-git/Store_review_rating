@@ -1,6 +1,7 @@
 # ---------------------------------------
 # Environment / Secrets
 # ---------------------------------------
+.gitignore
 .env
 .env.local
 .env.development
