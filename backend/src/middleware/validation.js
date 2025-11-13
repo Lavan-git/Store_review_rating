@@ -28,6 +28,31 @@ const validateSignup = [
     .withMessage('Password must be 8-16 characters with at least one uppercase letter and one special character')
 ];
 
+const validateOwnerCreateStore = [
+  body('name')
+    .trim()
+    .isLength({ min: 20, max: 60 })
+    .withMessage('Name must be between 20 and 60 characters'),
+  body('address')
+    .trim()
+    .isLength({ max: 400 })
+    .withMessage('Address must not exceed 400 characters'),
+];
+
+const validateOwnerUpdateStore = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 20, max: 60 })
+    .withMessage('Name must be between 20 and 60 characters'),
+  body('address')
+    .optional()
+    .trim()
+    .isLength({ max: 400 })
+    .withMessage('Address must not exceed 400 characters'),
+];
+
+
 const validateAddUser = [
   body('name')
     .trim()
@@ -107,6 +132,8 @@ module.exports = {
   validateAddStore,
   validateRating,
   validatePasswordChange,
+  validateOwnerCreateStore,
+  validateOwnerUpdateStore,
   validateUpdateUser,
   handleValidationErrors
 };

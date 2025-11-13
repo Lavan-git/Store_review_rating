@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { storeOwnerService } from '../services/api';
 
 const styles = `
@@ -23,22 +24,45 @@ const styles = `
   .rating-stars { background:#f39c12; color:#fff; padding:6px 12px; border-radius:8px; font-weight:700; font-size:13px }
   .comment-cell { font-size:13px; color:#888; font-style:italic; max-width:300px; white-space:pre-wrap; word-break:break-word }
   .loading, .error { text-align:center; padding:20px; font-size:16px }
-  .error { color:#e74c3c }
+  .error { color:#e74c3c; background:#fee; border-radius:8px; padding:12px; margin-bottom:16px }
+  .success { color:#27ae60; background:#e8f8f0; border-radius:8px; padding:12px; margin-bottom:16px }
+  .form-group { margin-bottom:20px }
+  .form-label { font-size:13px; font-weight:700; color:#888; text-transform:uppercase; margin-bottom:8px; display:block }
+  input, textarea { width:100%; padding:11px 12px; border:1px solid #ddd; border-radius:8px; font-size:14px; font-family:Arial,sans-serif; box-sizing:border-box }
+  input:focus, textarea:focus { outline:0; border-color:#3498db; box-shadow:0 0 0 3px rgba(52,152,219,0.1) }
+  input:disabled { background:#f5f5f5; cursor:not-allowed; color:#666 }
+  textarea { resize:vertical; min-height:100px }
+  .btn { padding:12px 24px; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:14px; margin-right:10px }
+  .btn:hover { opacity:0.9 }
+  .btn-primary { background:#27ae60; color:#fff }
+  .info-text { font-size:13px; color:#666; margin-top:6px }
+  .create-store-form { background:#fff; padding:26px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.06); max-width:700px }
 `;
 
 const StoreOwnerDashboard = () => {
+  const { user } = useAuth();
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [sort, setSort] = useState({ field: 'created_at', direction: 'desc' });
+  const [form, setForm] = useState({ name: '', address: '' });
 
   const fetchDashboard = useCallback(async (updatedSort = sort) => {
     try {
       setLoading(true);
       const response = await storeOwnerService.getDashboard();
+      
+      // If no store, set dashboard with hasStore flag
+      if (!response.data.hasStore) {
+        setDashboard(response.data);
+        setLoading(false);
+        return;
+      }
+
       let ratings = response.data.ratings || [];
       
-      // Client-side sorting for simplicity
+      // Client-side sorting
       ratings = ratings.sort((a, b) => {
         let aVal, bVal;
         if (updatedSort.field === 'user_name') {
@@ -85,10 +109,83 @@ const StoreOwnerDashboard = () => {
     setSort(newSort);
   };
 
+  const handleCreateStore = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      await storeOwnerService.createStore(form);
+      setSuccess('Store created successfully!');
+      setTimeout(() => {
+        fetchDashboard(sort); // Refresh dashboard
+      }, 1000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create store');
+    }
+  };
+
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return (
+      <>
+        <style>{styles}</style>
+        <div className="loading">Loading dashboard...</div>
+      </>
+    );
   }
 
+  // Show create form if no store
+  if (dashboard && !dashboard.hasStore) {
+    const email = dashboard.ownerEmail || user?.email;
+    
+    return (
+      <>
+        <style>{styles}</style>
+        <div className="dashboard-container">
+          <h1 className="dashboard-title">Create Your Store</h1>
+          
+          {error && <div className="error">{error}</div>}
+          {success && <div className="success">{success}</div>}
+          
+          <form className="create-store-form" onSubmit={handleCreateStore}>
+            <div className="form-group">
+              <label className="form-label">Email (from your account)</label>
+              <input type="email" value={email} disabled />
+              <div className="info-text">Email is locked to your account and cannot be changed</div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Store Name (20-60 characters)</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+                minLength={20}
+                maxLength={60}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Address (max 400 characters)</label>
+              <textarea
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                required
+                maxLength={400}
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary">
+              Create Store
+            </button>
+          </form>
+        </div>
+      </>
+    );
+  }
+
+  // Show dashboard if store exists
   return (
     <>
       <style>{styles}</style>
@@ -124,7 +221,7 @@ const StoreOwnerDashboard = () => {
             
             <div className="ratings-section">
               <h2 className="ratings-title">User Ratings</h2>
-              {dashboard.ratings.length > 0 ? (
+              {dashboard.ratings && dashboard.ratings.length > 0 ? (
                 <table className="ratings-table">
                   <thead>
                     <tr>

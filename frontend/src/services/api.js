@@ -46,5 +46,7 @@ export const userService = {
 };
 
 export const storeOwnerService = {
-  getDashboard: () => api.get('/store-owner/dashboard')
+  getDashboard: () => api.get('/store-owner/dashboard'),
+  createStore: (data) => api.post('/store-owner/stores', data),
+  updateStore: (storeId, data) => api.put(`/store-owner/stores/${storeId}`, data)
 };

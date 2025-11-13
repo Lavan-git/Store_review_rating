@@ -21,15 +21,57 @@ const styles = `
   .auth-link a:hover { text-decoration:underline }
   .server-error { background:#fee; color:#c0392b; padding:12px; border-radius:8px; margin-bottom:16px; border-left:4px solid #c0392b }
   .password-hint { font-size:12px; color:#888; margin-top:6px }
+  /* Role select: match inputs + custom arrow */
+.form-group select,
+.role-select {
+  width: 100%;
+  padding: 11px 40px 11px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  color: #333;
+  outline: 0;
+
+  /* remove native look and add custom arrow */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-image: url("data:image/svg+xml;utf8,<svg width='20' height='20' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path d='M6 9l6 6 6-6' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.form-group select:focus,
+.role-select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+}
+
+/* Disabled state (optional) */
+.form-group select:disabled,
+.role-select:disabled {
+  background-color: #f8f8f8;
+  color: #999;
+  cursor: not-allowed;
+}
+
 `;
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    address: '',
-    password: ''
-  });
+  name: '',
+  email: '',
+  address: '',
+  password: '',
+  role: 'normal_user', // NEW
+});
+
+
+
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,6 +85,10 @@ const Signup = () => {
       newErrors.name = 'Name is required';
     } else if (!validateName(formData.name)) {
       newErrors.name = 'Name must be between 20 and 60 characters';
+    }
+    // 2) Validate: add role check
+    if (!['normal_user','store_owner'].includes(formData.role)) {
+    newErrors.role = 'Please select a valid role';
     }
     
     if (!formData.email) {
@@ -134,6 +180,8 @@ const Signup = () => {
             />
             {errors.address && <div className="error-message">{errors.address}</div>}
           </div>
+
+
           
           <div className="form-group">
             <label>Password</label>
@@ -149,6 +197,20 @@ const Signup = () => {
             </div>
             {errors.password && <div className="error-message">{errors.password}</div>}
           </div>
+
+           {/* 3) JSX: add Role select below Password block */}
+            <div className="form-group">
+            <label>Role</label>
+            <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+            >
+                <option value="normal_user">Normal User</option>
+                <option value="store_owner">Store Owner</option>
+            </select>
+            {errors.role && <div className="error-message">{errors.role}</div>}
+            </div>
           
           <button type="submit" className="submit-btn" disabled={loading}>
             {loading ? 'Creating account...' : 'Sign Up'}

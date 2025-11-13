@@ -9,6 +9,11 @@ const authController = {
     try {
       const { name, email, address, password } = req.body;
 
+          // Whitelist role to normal_user or store_owner, default to normal_user
+      const role = ['store_owner', 'normal_user'].includes(req.body.role) 
+      ? req.body.role 
+      : 'normal_user';
+
       // Check if user exists
       const existingUser = await User.findByEmail(email);
       if (existingUser) {
@@ -16,7 +21,7 @@ const authController = {
       }
 
       // Create user
-      const user = await User.create(name, email, password, address, 'normal_user');
+      const user = await User.create(name, email, password, address, role);
 
       // Generate token
       const token = jwt.sign(
